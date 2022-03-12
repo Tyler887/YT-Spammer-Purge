@@ -293,7 +293,7 @@ def main():
   # Instructions
   print("Purpose: Lets you scan for spam comments and mass-delete them all at once \n")
   print("NOTE: It's probably better to scan individual videos, because you can scan all those comments,")
-  print("      but scanning your entire channel must be limited and might miss older spam comments.")
+  print("      but scanning channels must be limited and might miss older spam comments.")
   print("You will be shown the comments to confirm before they are deleted.")
 
   # While loop until user confirms they are logged into the correct account
@@ -403,7 +403,7 @@ def main():
     print(f"\n\n-------------------------------- {F.YELLOW}Scanning Options{S.R} --------------------------------")
     print(f"      1. Scan {F.LIGHTCYAN_EX}specific videos{S.R}")
     print(f"      2. Scan {F.LIGHTCYAN_EX}recent videos{S.R} for a channel")
-    print(f"      3. Scan recent comments across your {F.LIGHTBLUE_EX}Entire Channel{S.R}")
+    print(f"      3. Scan {F.LIGHTBLUE_EX}recent comments {F.R}for a channel{S.R}")
     print(f"      4. Scan a specific {F.LIGHTMAGENTA_EX}community post{S.R} (Experimental)")
     print(f"      5. Scan {F.LIGHTMAGENTA_EX}recent community posts{S.R} for a channel (Experimental)")
     print(f"\n--------------------------------- {F.YELLOW}Other Options{S.R} ----------------------------------")
@@ -711,43 +711,41 @@ def main():
 
     # If chooses to scan entire channel - Validate Channel ID
     elif scanMode == "entireChannel":
-      numVideos = 1 # Using this variable to indicate only one loop of scanning done later
-      # While loop to get max scan number, not an integer, asks again
-      validInteger = False
-      if config: validConfigSetting = True
-      while validInteger == False:
-        try:
-          if validConfigSetting == True and config and config['max_comments'] != 'ask':
-            maxScanNumber = int(config['max_comments'])
+      confirm = False
+      validEntry = False
+      validChannel = False
+      
+      while validChannel == False:
+        # Get and verify config setting for channel ID
+        if config['channel_to_scan'] != 'ask':
+          if config['channel_to_scan'] == 'mine':
+            channelID = CURRENTUSER.id
+            channelTitle = CURRENTUSER.name
+            validChannel = True
+            break
           else:
-            maxScanNumber = input(f"Enter the maximum {F.YELLOW}number of comments{S.R} to scan: ")
-            if str(maxScanNumber).lower() == "x":
-              return True # Return to main menu
-            maxScanNumber = int(maxScanNumber)
+            validChannel, channelID, channelTitle = validation.validate_channel_id(config['channel_to_scan'])
+            if validChannel == True:
+              break
+            else:
+              print("Invalid Channel ID or Link in config file!")
 
-            if maxScanNumber >= 100000:
-              print(f"\n{B.YELLOW}{F.BLACK} WARNING: {S.R} You have chosen to scan a large amount of comments. The default API quota limit ends up")
-              print(f" around {F.YELLOW}10,000 comment deletions per day{S.R}. If you find more spam than that you will go over the limit.")
-              print(f"        > Read more about the quota limits for this app here: {F.YELLOW}TJoe.io/api-limit-info{S.R}")
-              if userNotChannelOwner == True or moderator_mode == True:
-                print(f"{F.LIGHTCYAN_EX}> Note:{S.R} You may want to disable 'check_deletion_success' in the config, as this doubles the API cost! (So a 5K limit)")
-              userChoice = choice("Do you still want to continue?")
-              if userChoice == False:
-                validInteger == False
-              elif userChoice == None:
-                return True # Return to main menu
+        print(f"\nEnter a {F.YELLOW}channel ID or Link{S.R} to scan comments from")
+        print(f"   > If scanning {F.YELLOW}your own channel{S.R}, just hit {F.LIGHTGREEN_EX}Enter{S.R}")
+        inputtedChannel = input("\nEnter Here: ")
+        if inputtedChannel == "":
+          channelID = CURRENTUSER.id
+          channelTitle = CURRENTUSER.name
+          validChannel = True
+        elif str(inputtedChannel).lower() == "x":
+          return True # Return to main menu
+        else:
+          validChannel, channelID, channelTitle = validation.validate_channel_id(inputtedChannel)
 
-          if maxScanNumber > 0:
-            validInteger = True # If it gets here, it's an integer, otherwise goes to exception
-          else:
-            print("\nInvalid Input! Number must be greater than zero.")
-            validConfigSetting = False
-        except:
-          print("\nInvalid Input! - Must be a whole number.")
-          validConfigSetting = False
+      if CURRENTUSER.id != channelID:
+        userNotChannelOwner = True
 
-      miscData.channelOwnerID = CURRENTUSER.id
-      miscData.channelOwnerName = CURRENTUSER.name
+      print(f"\nChosen Channel: {F.LIGHTCYAN_EX}{channelTitle}{S.R}")
 
 # ================================================================================ COMMUNITY POST =====================================================================================================
 
