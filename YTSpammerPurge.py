@@ -741,11 +741,17 @@ def main():
           return True # Return to main menu
         else:
           validChannel, channelID, channelTitle = validation.validate_channel_id(inputtedChannel)
-
+      miscData.channelOwnerID = videosToScan[0]['channelOwnerID']
+      miscData.channelOwnerName = videosToScan[0]['channelOwnerName']
       if CURRENTUSER.id != channelID:
-        userNotChannelOwner = True
-
+         userNotChannelOwner = True
+      if userNotChannelOwner == True and moderator_mode == False:
+              print(f"{F.LIGHTRED_EX}NOTE: You do not own this channel. Enabling '{F.YELLOW}Not Your Channel Mode{F.LIGHTRED_EX}'. You can report spam comments, but not delete them.{S.R}")
+      elif userNotChannelOwner == True and moderator_mode == True:
+              print(f"{F.LIGHTRED_EX}NOTE: {F.YELLOW}Moderator Mode is enabled{F.LIGHTRED_EX}. You can hold comments for review when using certain modes{S.R}")
       print(f"\nChosen Channel: {F.LIGHTCYAN_EX}{channelTitle}{S.R}")
+      if CURRENTUSER.id != videosToScan[0]['channelOwnerID']:
+        userNotChannelOwner = True
 
 # ================================================================================ COMMUNITY POST =====================================================================================================
 
